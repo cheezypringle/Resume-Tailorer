@@ -27,6 +27,8 @@ interface AppState {
   removeAppendixImage: (id: string) => void;
   moveAppendixImage: (id: string, direction: 'up' | 'down') => void;
   clearAppendixImages: () => void;
+  googleSheetsUrl: string;
+  setGoogleSheetsUrl: (url: string) => void;
   resetAll: () => void;
 }
 
@@ -39,13 +41,24 @@ export function useApp() {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKeyState] = useState(() => localStorage.getItem('rt_apiKey') || '');
   const [resumeText, setResumeText] = useState('');
   const [resumeFileName, setResumeFileName] = useState('');
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [currentStep, setCurrentStep] = useState<AppStep>('upload');
   const [selectedJDId, setSelectedJDId] = useState<string | null>(null);
   const [appendixImages, setAppendixImages] = useState<AppendixImage[]>([]);
+  const [googleSheetsUrl, setGoogleSheetsUrlState] = useState(() => localStorage.getItem('rt_sheetsUrl') || '');
+
+  const setApiKey = useCallback((key: string) => {
+    setApiKeyState(key);
+    localStorage.setItem('rt_apiKey', key);
+  }, []);
+
+  const setGoogleSheetsUrl = useCallback((url: string) => {
+    setGoogleSheetsUrlState(url);
+    localStorage.setItem('rt_sheetsUrl', url);
+  }, []);
 
   const setResume = useCallback((text: string, fileName: string) => {
     setResumeText(text);
@@ -126,6 +139,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentStep, setCurrentStep,
         selectedJDId, setSelectedJDId,
         appendixImages, addAppendixImage, removeAppendixImage, moveAppendixImage, clearAppendixImages,
+        googleSheetsUrl, setGoogleSheetsUrl,
         resetAll,
       }}
     >

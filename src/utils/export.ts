@@ -57,18 +57,24 @@ function sectionHeader(title: string): Paragraph {
   });
 }
 
+// Page content width in twips: (8.5" - 1.0" margins) * 1440 twip/in = 10800
+const CONTENT_WIDTH_TWIPS = 10800;
+const LEFT_COL_TWIPS = Math.round(CONTENT_WIDTH_TWIPS * 0.75);   // 8100
+const RIGHT_COL_TWIPS = CONTENT_WIDTH_TWIPS - LEFT_COL_TWIPS;    // 2700
+
 function twoColumnRow(left: string, right: string, opts?: { bold?: boolean; italics?: boolean }): Table {
   const bold = opts?.bold ?? false;
   const italics = opts?.italics ?? false;
   return new Table({
     layout: TableLayoutType.FIXED,
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: CONTENT_WIDTH_TWIPS, type: WidthType.DXA },
+    columnWidths: [LEFT_COL_TWIPS, RIGHT_COL_TWIPS],
     borders: { ...INVISIBLE_BORDERS, insideHorizontal: NO_BORDER, insideVertical: NO_BORDER },
     rows: [
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 75, type: WidthType.PERCENTAGE },
+            width: { size: LEFT_COL_TWIPS, type: WidthType.DXA },
             borders: INVISIBLE_BORDERS,
             children: [
               new Paragraph({
@@ -80,7 +86,7 @@ function twoColumnRow(left: string, right: string, opts?: { bold?: boolean; ital
             ],
           }),
           new TableCell({
-            width: { size: 25, type: WidthType.PERCENTAGE },
+            width: { size: RIGHT_COL_TWIPS, type: WidthType.DXA },
             borders: INVISIBLE_BORDERS,
             children: [
               new Paragraph({
@@ -130,11 +136,10 @@ function scaleToFit(imgW: number, imgH: number, maxW: number, maxH: number): { w
   return { width: Math.round(imgW * ratio), height: Math.round(imgH * ratio) };
 }
 
-export async function exportToDocx(
+export async function generateDocxBlob(
   resume: StructuredResume,
-  label: string,
   appendixImages?: AppendixImage[],
-) {
+): Promise<Blob> {
   const children: (Paragraph | Table)[] = [];
 
   // Name + contact
@@ -244,7 +249,15 @@ export async function exportToDocx(
     }],
   });
 
-  const blob = await Packer.toBlob(doc);
+  return Packer.toBlob(doc);
+}
+
+export async function exportToDocx(
+  resume: StructuredResume,
+  label: string,
+  appendixImages?: AppendixImage[],
+) {
+  const blob = await generateDocxBlob(resume, appendixImages);
   const safeName = label.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'tailored-resume';
   saveAs(blob, `${safeName}.docx`);
 }

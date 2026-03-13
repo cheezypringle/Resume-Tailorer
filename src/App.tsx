@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import ResumeUpload from './components/ResumeUpload';
 import JDQueue from './components/JDQueue';
 import ResultView from './components/ResultView';
+import Settings from './components/Settings';
 
 function ApiKeyInput() {
   const { apiKey, setApiKey } = useApp();
@@ -41,6 +43,7 @@ function ApiKeyInput() {
 
 function AppContent() {
   const { apiKey, currentStep, resetAll } = useApp();
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!apiKey) return <ApiKeyInput />;
 
@@ -55,14 +58,25 @@ function AppContent() {
       <header className="bg-white border-b">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-gray-900">Resume Tailor</h1>
-          <button
-            onClick={resetAll}
-            className="text-xs text-gray-400 hover:text-red-500 cursor-pointer"
-          >
-            Reset All
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
+              title="Settings"
+            >
+              &#9881; Settings
+            </button>
+            <button
+              onClick={resetAll}
+              className="text-xs text-gray-400 hover:text-red-500 cursor-pointer"
+            >
+              Reset All
+            </button>
+          </div>
         </div>
       </header>
+
+      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
 
       {/* Step indicator */}
       <div className="max-w-2xl mx-auto px-4 py-4">

@@ -24,6 +24,7 @@ export default function JDQueue() {
   };
 
   const pendingCount = jobDescriptions.filter(jd => jd.status === 'pending').length;
+  const processingCount = jobDescriptions.filter(jd => ['tailoring', 'researching', 'coaching', 'exporting'].includes(jd.status)).length;
   const doneCount = jobDescriptions.filter(jd => jd.status === 'done').length;
 
   return (
@@ -37,7 +38,7 @@ export default function JDQueue() {
         </button>
         {jobDescriptions.length > 0 && (
           <p className="text-sm text-gray-500">
-            {doneCount} done, {pendingCount} pending
+            {doneCount} done{processingCount > 0 ? `, ${processingCount} processing` : ''}, {pendingCount} pending
           </p>
         )}
       </div>
@@ -79,7 +80,8 @@ export default function JDQueue() {
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
                   jd.status === 'done' ? 'bg-green-500' :
-                  jd.status === 'processing' ? 'bg-yellow-500' :
+                  jd.status === 'tailoring' ? 'bg-yellow-500' :
+                  ['researching', 'coaching', 'exporting'].includes(jd.status) ? 'bg-blue-500' :
                   jd.status === 'error' ? 'bg-red-500' :
                   'bg-gray-300'
                 }`} />
@@ -94,12 +96,20 @@ export default function JDQueue() {
                     View
                   </button>
                 )}
+                {['tailoring', 'researching', 'coaching', 'exporting'].includes(jd.status) && (
+                  <button
+                    onClick={() => handleProcess(jd.id)}
+                    className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 cursor-pointer"
+                  >
+                    View
+                  </button>
+                )}
                 {jd.status === 'pending' && (
                   <button
                     onClick={() => handleProcess(jd.id)}
                     className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 cursor-pointer"
                   >
-                    Tailor
+                    Process
                   </button>
                 )}
                 {jd.status === 'error' && (

@@ -1,4 +1,21 @@
-export type JDStatus = 'pending' | 'processing' | 'done' | 'error';
+export type JDStatus = 'pending' | 'tailoring' | 'researching' | 'coaching' | 'exporting' | 'done' | 'error';
+
+export interface PipelineError {
+  stage: string;
+  message: string;
+}
+
+export interface ResearchResult {
+  companyName: string;
+  companySummary: string;
+  companyResearch: string;
+  jobResearch: string;
+  commonQuestions: string[];
+}
+
+export interface CareerCoachResult {
+  interviewAdvice: string;
+}
 
 export interface JobDescription {
   id: string;
@@ -7,6 +24,9 @@ export interface JobDescription {
   status: JDStatus;
   result?: TailoringResult;
   coverLetter?: string;
+  researchResult?: ResearchResult;
+  coachResult?: CareerCoachResult;
+  pipelineError?: PipelineError;
 }
 
 export interface TailoringResult {

@@ -1,16 +1,21 @@
 import type { StructuredResume } from '../types';
+import { OPENROUTER_URL, streamFromOpenRouter } from './openrouter';
 
 const TAILORING_SYSTEM_PROMPT = `You are an expert resume tailor. Your job is to customize a resume for a specific job description.
 
+CRITICAL RULE: The base resume is your ONLY source of truth. Every single fact — company names, roles, dates, metrics, achievements, skills, tools — must come directly from the base resume. If something is not in the base resume, it MUST NOT appear in the output. When in doubt, leave it out.
+
 You must follow these rules strictly:
-1. NEVER fabricate skills, experience, titles, dates, metrics, or achievements. Only reframe, reword, and reorganize what exists.
-2. Extract critical keywords (hard skills, tools, certifications, domain terms) from the job description.
-3. Weave matched keywords into the resume naturally where the candidate's experience supports the claim.
-4. Rewrite bullet points to mirror the JD's language, priorities, and metric style. Strengthen action verbs and surface quantified achievements.
-5. Reorder sections and bullets so the most JD-relevant content appears first.
-6. Preserve standard section names (Experience, Education, Skills, etc.) for ATS compatibility.
-7. Keep the chronological order within each section (most recent first).
-8. Keep content concise enough to fit on ONE page. Cut or consolidate weaker bullets if needed.
+1. NEVER fabricate, infer, or add skills, experience, titles, dates, metrics, tools, or achievements that are not explicitly present in the base resume. Do NOT add skills just because the JD asks for them.
+2. NEVER upgrade or inflate metrics (e.g., don't change "10%" to "15%", don't change "200+ hours" to "500+ hours").
+3. NEVER invent new bullet points. You may only reword, merge, or reorganize existing bullets.
+4. Extract critical keywords from the JD and weave them in ONLY where the candidate's existing experience genuinely supports the claim.
+5. Rewrite bullet points to mirror the JD's language and priorities, but the underlying facts must remain unchanged.
+6. Reorder sections and bullets so the most JD-relevant content appears first.
+7. Preserve standard section names (Experience, Education, Skills, etc.) for ATS compatibility.
+8. Keep the chronological order within each section (most recent first).
+9. Keep content concise enough to fit on ONE page. Cut or consolidate weaker bullets if needed.
+10. For the Skills section: only list skills that are explicitly mentioned in or clearly demonstrated by the base resume. Do NOT add JD-required skills the candidate doesn't have.
 
 Your output must be in EXACTLY this format:
 
@@ -88,46 +93,11 @@ Rules:
 1. NEVER fabricate experience, projects, or achievements. Only reference what exists in the resume.
 2. Avoid generic filler like "I'm excited to apply" or "I believe I would be a great fit." Lead with a concrete value proposition.
 3. Reference specific JD requirements and how the candidate's experience maps to them.
-4. Keep it 250-400 words.
+4. Keep it under 100 words. Be extremely concise — every word must earn its place.
 5. Use a professional but direct tone.
 6. Output plain text only — no markdown formatting, no headers, no bullet points unless natural in a letter.`;
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-sonnet-4';
-
-function streamFromOpenRouter(
-  reader: ReadableStreamDefaultReader<Uint8Array>,
-  onProgress?: (text: string) => void,
-): Promise<string> {
-  const decoder = new TextDecoder();
-  let fullText = '';
-
-  return (async () => {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              fullText += delta;
-              onProgress?.(fullText);
-            }
-          } catch {
-            // skip non-JSON lines
-          }
-        }
-      }
-    }
-    return fullText;
-  })();
-}
 
 function structuredToPlainText(resume: StructuredResume): string {
   const lines: string[] = [];
