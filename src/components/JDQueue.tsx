@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { usePipeline } from '../hooks/usePipeline';
 
 export default function JDQueue() {
   const { jobDescriptions, addJD, removeJD, moveJD, setCurrentStep, setSelectedJDId, updateJD } = useApp();
+  const { runPipeline } = usePipeline();
   const [label, setLabel] = useState('');
   const [text, setText] = useState('');
+  const [processingAll, setProcessingAll] = useState(false);
 
   const handleAdd = () => {
     if (!text.trim()) return;
@@ -13,14 +16,22 @@ export default function JDQueue() {
     setText('');
   };
 
-  const handleProcess = (id: string) => {
+  const handleView = (id: string) => {
     setSelectedJDId(id);
     setCurrentStep('results');
   };
 
-  const handleProcessNext = () => {
-    const next = jobDescriptions.find(jd => jd.status === 'pending');
-    if (next) handleProcess(next.id);
+  const handleProcessAll = async () => {
+    setProcessingAll(true);
+    // Capture pending IDs upfront; runPipeline takes a snapshot of the JD
+    const pendingIds = jobDescriptions.filter(jd => jd.status === 'pending').map(jd => jd.id);
+    for (const id of pendingIds) {
+      const jd = jobDescriptions.find(j => j.id === id);
+      if (jd && jd.status === 'pending') {
+        await runPipeline(jd);
+      }
+    }
+    setProcessingAll(false);
   };
 
   const pendingCount = jobDescriptions.filter(jd => jd.status === 'pending').length;
@@ -88,33 +99,17 @@ export default function JDQueue() {
                 <span className="text-sm truncate">{jd.label}</span>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                {jd.status === 'done' && (
+                {jd.status !== 'pending' && (
                   <button
-                    onClick={() => handleProcess(jd.id)}
+                    onClick={() => handleView(jd.id)}
                     className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 cursor-pointer"
                   >
                     View
-                  </button>
-                )}
-                {['tailoring', 'researching', 'coaching', 'exporting'].includes(jd.status) && (
-                  <button
-                    onClick={() => handleProcess(jd.id)}
-                    className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 cursor-pointer"
-                  >
-                    View
-                  </button>
-                )}
-                {jd.status === 'pending' && (
-                  <button
-                    onClick={() => handleProcess(jd.id)}
-                    className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 cursor-pointer"
-                  >
-                    Process
                   </button>
                 )}
                 {jd.status === 'error' && (
                   <button
-                    onClick={() => { updateJD(jd.id, { status: 'pending' }); handleProcess(jd.id); }}
+                    onClick={() => updateJD(jd.id, { status: 'pending' })}
                     className="text-xs text-orange-600 hover:text-orange-800 px-2 py-1 cursor-pointer"
                   >
                     Retry
@@ -143,13 +138,17 @@ export default function JDQueue() {
         </div>
       )}
 
-      {/* Process Next Button */}
+      {/* Process All Button */}
       {pendingCount > 0 && (
         <button
-          onClick={handleProcessNext}
-          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition font-medium cursor-pointer"
+          onClick={handleProcessAll}
+          disabled={processingAll}
+          className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition font-medium cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Process Next ({pendingCount} pending)
+          {processingAll
+            ? `Processing... (${pendingCount} remaining)`
+            : `Process All (${pendingCount} pending)`
+          }
         </button>
       )}
     </div>

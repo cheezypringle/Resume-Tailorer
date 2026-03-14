@@ -5,7 +5,7 @@ AI-powered job application pipeline that tailors your resume, researches the com
 ## Features
 
 - **Resume Upload** — Drag-and-drop .docx parsing with mammoth.js (client-side, no server upload)
-- **JD Queue** — Add multiple job descriptions, process them in one click
+- **JD Queue** — Add multiple job descriptions, "Process All" runs the full pipeline on every pending JD sequentially
 - **AI Tailoring** — Keywords injection, bullet rewriting, and section reordering via Claude (through OpenRouter). Strictly grounded in your base resume — no hallucinated skills or inflated metrics
 - **Company & Job Research** — Automated web search (Perplexity Sonar) for company intel and domain-specific knowledge relevant to the JD
 - **Career Coach** — AI-generated interview prep: talking points, gap analysis, and company-specific insights
@@ -50,7 +50,7 @@ Open http://localhost:5173 in your browser. You'll need an [OpenRouter API key](
 2. Upload your master resume (.docx)
 3. Optionally attach appendix images (screenshots of EP letters, certificates, etc.)
 4. Paste one or more job descriptions into the queue
-5. Click "Process" — the pipeline runs automatically:
+5. Click "Process All" — the pipeline runs automatically on every queued JD:
    - **Tailoring** — AI rewrites your resume for the JD
    - **Research** — Web search for company info and domain-specific knowledge
    - **Coaching** — Interview prep and talking points

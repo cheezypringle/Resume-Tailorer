@@ -16,6 +16,8 @@ You must follow these rules strictly:
 8. Keep the chronological order within each section (most recent first).
 9. Keep content concise enough to fit on ONE page. Cut or consolidate weaker bullets if needed.
 10. For the Skills section: only list skills that are explicitly mentioned in or clearly demonstrated by the base resume. Do NOT add JD-required skills the candidate doesn't have.
+11. NEVER drop or leave blank the "role" field for any experience item. Every job/project in the base resume has a title — preserve it exactly.
+12. NEVER drop skills, tools, or technologies from the Skills section that exist in the base resume. You may reorganize or relabel skill categories to match the JD, but the actual skills listed must be a superset of what the base resume contains.
 
 Your output must be in EXACTLY this format:
 
@@ -155,7 +157,7 @@ export async function tailorResume(
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 8192,
       stream: true,
       messages: [
         { role: 'system', content: TAILORING_SYSTEM_PROMPT },
@@ -184,19 +186,47 @@ export async function tailorResume(
   const jsonPart = fullText.slice(0, delimIdx).trim();
   const notesPart = fullText.slice(delimIdx + delimiter.length).trim();
 
-  // Try to parse structured JSON
-  try {
-    const structured: StructuredResume = JSON.parse(jsonPart);
-    // Validate minimal structure
-    if (structured.name && structured.sections && Array.isArray(structured.sections)) {
-      return {
-        tailoredResume: structuredToPlainText(structured),
-        structuredResume: structured,
-        tailoringNotes: notesPart,
-      };
+  // Try to parse structured JSON (with repair for truncated output)
+  const tryParseJSON = (raw: string): StructuredResume | null => {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // Attempt to repair truncated JSON by closing open braces/brackets
+      let repaired = raw;
+      // Remove any trailing incomplete key-value pair (e.g., `"label": "Dat`)
+      repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*$/, '');
+      // Count unclosed brackets
+      const opens = (repaired.match(/[{[]/g) || []).length;
+      const closes = (repaired.match(/[}\]]/g) || []).length;
+      const missing = opens - closes;
+      if (missing > 0) {
+        // Heuristically close: scan from end to determine bracket order
+        const stack: string[] = [];
+        for (const ch of repaired) {
+          if (ch === '{' || ch === '[') stack.push(ch);
+          else if (ch === '}' || ch === ']') stack.pop();
+        }
+        while (stack.length > 0) {
+          const open = stack.pop();
+          repaired += open === '{' ? '}' : ']';
+        }
+        try {
+          return JSON.parse(repaired);
+        } catch {
+          return null;
+        }
+      }
+      return null;
     }
-  } catch {
-    // JSON parse failed — fall back to plain text
+  };
+
+  const structured = tryParseJSON(jsonPart);
+  if (structured?.name && structured?.sections && Array.isArray(structured.sections)) {
+    return {
+      tailoredResume: structuredToPlainText(structured),
+      structuredResume: structured,
+      tailoringNotes: notesPart,
+    };
   }
 
   return {
