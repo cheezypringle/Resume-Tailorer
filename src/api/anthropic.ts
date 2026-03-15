@@ -14,10 +14,12 @@ You must follow these rules strictly:
 6. Reorder sections and bullets so the most JD-relevant content appears first.
 7. Preserve standard section names (Experience, Education, Skills, etc.) for ATS compatibility.
 8. Keep the chronological order within each section (most recent first).
-9. Keep content concise enough to fit on ONE page. Cut or consolidate weaker bullets if needed.
-10. For the Skills section: only list skills that are explicitly mentioned in or clearly demonstrated by the base resume. Do NOT add JD-required skills the candidate doesn't have.
-11. NEVER drop or leave blank the "role" field for any experience item. Every job/project in the base resume has a title — preserve it exactly.
-12. NEVER drop skills, tools, or technologies from the Skills section that exist in the base resume. You may reorganize or relabel skill categories to match the JD, but the actual skills listed must be a superset of what the base resume contains.
+9. Limit each experience item to 3–5 bullets, depending on importance.
+10. Do NOT remove bullet points. The base resume is already concise. Instead, reword existing bullets to incorporate JD keywords where the candidate's experience genuinely supports the terminology. Reorder bullets within each role so the most JD-relevant ones appear first.
+11. For the Skills section: only list skills that are explicitly mentioned in or clearly demonstrated by the base resume. Do NOT add JD-required skills the candidate doesn't have.
+12. NEVER drop or leave blank the "role" field for any experience item. Every job/project in the base resume has a title — preserve it exactly.
+13. NEVER drop skills, tools, or technologies from the Skills section that exist in the base resume. You may reorganize or relabel skill categories to match the JD, but the actual skills listed must be a superset of what the base resume contains.
+14. If the job description is vague or lacks specific technical requirements, focus on improving clarity, impact, and conciseness of the existing resume rather than trying to keyword-match.
 
 Your output must be in EXACTLY this format:
 
